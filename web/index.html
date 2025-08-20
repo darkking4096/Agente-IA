@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>Fernanda IA • Demo WhatsApp</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <style>
+    body{margin:0;background:#e5ddd5;font-family:Inter,system-ui,Arial}
+    .wrap{max-width:680px;margin:0 auto}
+    .status{padding:10px;text-align:center;background:#d4edda;color:#155724;font-weight:600}
+    .card{background:#fff;border-radius:12px;box-shadow:0 2px 10px rgba(0,0,0,.08);overflow:hidden;margin:16px}
+    .head{background:#075e54;color:#fff;padding:14px 16px;font-weight:700}
+    .msgs{height:460px;overflow-y:auto;background:#e5ddd5;padding:16px}
+    .msg{max-width:80%;padding:10px 14px;border-radius:18px;margin:8px 0;word-wrap:break-word;white-space:pre-wrap}
+    .bot{background:#fff;margin-right:auto}
+    .me{background:#dcf8c6;margin-left:auto}
+    .bar{display:flex;gap:8px;padding:10px;background:#f5f5f5}
+    input,button{font:inherit}
+    .phone{width:170px}
+    .text{flex:1}
+    button{background:#25d366;border:0;color:#fff;padding:10px 16px;border-radius:18px;cursor:pointer}
+    .row{display:flex;gap:8px;padding:10px 10px 0;background:#f5f5f5}
+    .row input{flex:1;padding:8px;border:1px solid #ddd;border-radius:10px}
+    .chips{padding:10px;text-align:center;background:#fafafa}
+    .chips button{background:#128c7e;border-radius:14px;padding:7px 12px;font-size:12px;margin:3px}
+    .muted{opacity:.75}
+  </style>
+</head>
+<body>
+  <div class="status" id="status">🔄 verificando Fernanda…</div>
+
+  <div class="wrap card">
+    <div class="head">💬 Fernanda IA — Assistente da Clínica</div>
+
+    <div class="row">
+      <input id="phone" class="phone" placeholder="DDD+Número (ex: 5562999999999)" value="5562999999999">
+      <input id="token" placeholder="X-Webhook-Token (para demo pode fixar aqui)">
+    </div>
+
+    <div id="msgs" class="msgs">
+      <div class="msg bot">Olá! 😊 Sou a Fernanda. Como posso te ajudar?</div>
+    </div>
+
+    <div class="chips">
+      <button onclick="quick('Olá!')">Cumprimentar</button>
+      <button onclick="quick('Preciso agendar uma consulta')">Agendar</button>
+      <button onclick="quick('Estou com dor no siso')">Urgência</button>
+      <button onclick="quick('Quais os horários?')">Horários</button>
+    </div>
+
+    <div class="bar">
+      <input id="text" class="text" placeholder="Escreva sua mensagem…" onkeypress="if(event.key==='Enter')send()">
+      <button onclick="send()">Enviar</button>
+    </div>
+  </div>
+
+<script>
+  const WEBHOOK = '/webhook';
+
+  // carrega token/phone salvos
+  phone.value = localStorage.getItem('phone') || '5562999999999';
+  token.value = localStorage.getItem('token') || '';
+
+  token.addEventListener('input', () => localStorage.setItem('token', token.value));
+  phone.addEventListener('input', () => localStorage.setItem('phone', phone.value));
+
+  async function ping(){
+    try{
+      const r = await fetch('/status', {headers:{'Accept':'application/json'}});
+      const j = await r.json().catch(()=>({}));
+      statusEl.textContent = j.status ? `✅ ${j.status}` : '⚠️ online, mas sem status';
+      statusEl.style.background = '#d4edda';
+      statusEl.style.color = '#155724';
+    }catch{
+      statusEl.textContent = '❌ não encontrei a Fernanda em localhost';
+      statusEl.style.background = '#f8d7da';
+      statusEl.style.color = '#721c24';
+    }
+  }
+  ping(); setInterval(ping, 10000);
+
+    function add(text, who){ const d=document.createElement('div'); d.className='msg '+who; d.textContent=text; msgs.appendChild(d); msgs.scrollTop=msgs.scrollHeight; return d }
+    function addMe(t){ return add(t,'me') }
+    function addBot(t){ return add(t,'bot') }
+    function quick(t){ document.getElementById('text').value=t; send() }
+
+    async function send(){
+      const phone = document.getElementById('phone').value.trim()
+      const token = document.getElementById('token').value.trim()
+      const text  = document.getElementById('text').value.trim()
+      if(!text) return
+      addMe(text)
+      document.getElementById('text').value=''
+
+      const typing = addBot('Fernanda está digitando… ⌛'); typing.classList.add('muted')
+
+      try{
+        const r = await fetch(WEBHOOK, {
+          method:'POST',
+          headers:{
+            'Content-Type':'application/json; charset=utf-8',
+            ...(token ? {'X-Webhook-Token': token} : {})
+          },
+          body: JSON.stringify({ from: phone || '555555555555', text })
+        })
+
+        const res = await r.json().catch(()=>({}))
+        typing.remove()
+
+        // suporta os dois formatos que seu backend já retornou
+        const reply = res.reply_text || res.response || (res.result && (res.result.response || res.result.reply || res.result)) || JSON.stringify(res)
+        addBot(String(reply || 'Mensagem processada.'))
+      }catch(e){
+        typing.remove()
+        addBot('❌ Erro de conexão com o webhook. Confira se os containers estão ativos.')
+        console.error(e)
+      }
+    }
+  </script>
+</body>
+</html>

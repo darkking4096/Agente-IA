@@ -1,0 +1,25 @@
+{
+  "clinic_name": "Clínica Sorriso & Saúde",
+  "address": "Av. Central, 123 - Setor Sul, Goiânia - GO",
+  "phone_whatsapp": "+55 62 99999-0000",
+  "google_calendar": {
+    "calendars": {
+      "Endodontia": "calendar_id_endodontia",
+      "Ortodontia": "calendar_id_ortodontia",
+      "Clínica Geral": "calendar_id_clinica_geral",
+      "Implantodontia/Prótese": "calendar_id_implante",
+      "Periodontia": "calendar_id_periodontia",
+      "Cirurgia Bucomaxilofacial": "calendar_id_cirurgia",
+      "Estética": "calendar_id_estetica"
+    }
+  },
+  "business_hours": {
+    "monday": {"open": "08:00", "close": "18:00"},
+    "tuesday": {"open": "08:00", "close": "18:00"},
+    "wednesday": {"open": "08:00", "close": "18:00"},
+    "thursday": {"open": "08:00", "close": "18:00"},
+    "friday": {"open": "08:00", "close": "18:00"},
+    "saturday": {"open": "08:00", "close": "12:00"},
+    "sunday": {"closed": true}
+  }
+}
